@@ -143,8 +143,8 @@ class Queue(TimeStampAbstractModel):
     branch = models.ForeignKey('bank.Branch', models.PROTECT, verbose_name=_('отделение'))
     service = models.ForeignKey('core.Service', models.PROTECT, verbose_name=_('сервис'))
     value = models.PositiveIntegerField(_('место'))
-    type = models.CharField(_('тип'), choices=TYPE, default=SIMPLE)
-    status = models.CharField(_('статус'), choices=STATUS, default=WAITING)
+    type = models.CharField(_('тип'), choices=TYPE, default=SIMPLE, max_length=20)
+    status = models.CharField(_('статус'), choices=STATUS, default=WAITING, max_length=20)
 
     @property
     def slug(self):
