@@ -12,3 +12,4 @@ django-resized
 phonenumbers
 Pillow
 python-decouple
+psycopg2-binary

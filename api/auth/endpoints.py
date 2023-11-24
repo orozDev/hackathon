@@ -4,6 +4,7 @@ from . import api
 
 router = routers.DefaultRouter()
 router.register('users', api.UserViewSet)
+router.register('clients', api.ClientViewSet)
 
 urlpatterns = [
     path('profile/', api.ProfileApiView.as_view()),

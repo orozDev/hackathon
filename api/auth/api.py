@@ -8,13 +8,15 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_registration.utils.responses import get_ok_response
 
-from api.mixins import PaginationBreaker
+from api.mixins import PaginationBreaker, UltraModelViewSet
 from .serializers import LoginSerializer, UserSerializer, ProfileSerializer, RegisterUserSerializer, \
-    ResetPasswordSerializer, SendResetPasswordKeySerializer, ChangePasswordSerializer
-from account.models import User, UserResetPassword
+    ResetPasswordSerializer, SendResetPasswordKeySerializer, ChangePasswordSerializer, ReadClientSerializer, \
+    ClientSerializer
+from account.models import User, UserResetPassword, Client
 
 from .services import UserPasswordResetManager
 from ..paginations import StandardResultsSetPagination
+from ..permissions import IsSuperAdmin
 
 
 class LoginApiView(GenericAPIView):
@@ -124,3 +126,26 @@ class ResetPasswordByKeyApiView(GenericAPIView):
             {'is_changed': is_changed},
             status=status.HTTP_200_OK if is_changed else status.HTTP_400_BAD_REQUEST
         )
+
+
+class ClientViewSet(UltraModelViewSet):
+    queryset = Client.objects.all()
+    serializer_classes = {
+        'create': ClientSerializer,
+        'list': ReadClientSerializer,
+        'update': ClientSerializer,
+        'retrieve': ReadClientSerializer,
+    }
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [DjangoFilterBackend,
+                       filters.OrderingFilter,
+                       filters.SearchFilter]
+    ordering_fields = ['created_at']
+    filterset_fields = ['user']
+    permission_classes_by_action = {
+        'create': (AllowAny,),
+        'list': (IsAuthenticated, IsSuperAdmin,),
+        'update': (IsAuthenticated, IsSuperAdmin,),
+        'retrieve': (IsAuthenticated, IsSuperAdmin),
+        'destroy': (IsAuthenticated, IsSuperAdmin),
+    }

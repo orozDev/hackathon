@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'ckeditor',
     'account',
     'core',
+    'bank',
 ]
 
 MIDDLEWARE = [

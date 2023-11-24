@@ -13,6 +13,17 @@ from .managers import UserManager
 
 
 class User(AbstractUser):
+
+    CLIENT = 'client'
+    STAFF = 'staff'
+    ADMIN = 'admin'
+
+    ROLE = (
+        (CLIENT, _('Клиент')),
+        (STAFF, _('Сотрудник')),
+        (ADMIN, _('Администратор')),
+    )
+
     class Meta:
         verbose_name = _('пользователь')
         verbose_name_plural = _('пользователи')
@@ -24,6 +35,7 @@ class User(AbstractUser):
                                null=True, blank=True)
     phone = PhoneNumberField(max_length=100, unique=True, verbose_name=_('номер телефона'))
     email = models.EmailField(blank=True, verbose_name=_('электронная почта'), unique=True)
+    role = models.CharField(_('роль'), choices=ROLE, default=CLIENT)
     last_activity = models.DateTimeField(blank=True,
                                          null=True, verbose_name=_('последнее действие'), )
 
@@ -55,5 +67,40 @@ class UserResetPassword(TimeStampAbstractModel):
 
     def __str__(self):
         return f'{self.user}'
+
+
+class Client(TimeStampAbstractModel):
+
+    SIMPLE = 'simple'
+    PLATINUM = 'platinum'
+    GOLD = 'gold'
+
+    STATUS = (
+        (SIMPLE, _('Simple')),
+        (PLATINUM, _('Platinum')),
+        (GOLD, _('Gold')),
+    )
+
+    class Meta:
+        verbose_name = _('клиент')
+        verbose_name_plural = _('клиенты')
+        ordering = ('-created_at', '-updated_at')
+
+    user = models.OneToOneField('account.User', models.CASCADE, related_name='client', verbose_name=_('пользователь'))
+    status = models.CharField(_('статус'), max_length=10, choices=STATUS, default=SIMPLE)
+
+
+class Staff(TimeStampAbstractModel):
+
+    class Meta:
+        verbose_name = _('сотрудник')
+        verbose_name_plural = _('сотрудники')
+        ordering = ('-created_at', '-updated_at')
+
+    user = models.OneToOneField('account.User', models.CASCADE, related_name='staff', verbose_name=_('пользователь'))
+    branch = models.ForeignKey('bank.Branch', models.PROTECT, verbose_name=_('место работы'))
+
+    def __str__(self):
+        return f'{self.user.get_full_name} - {self.branch}'
 
 # Create your models here.

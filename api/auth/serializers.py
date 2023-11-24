@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from account.models import User
+from account.models import User, Client
+from django.utils.translation import gettext_lazy as _
+
+from utils.serializers import ShortDescUserSerializer
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -52,10 +55,18 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField()
 
 
+class ClientForUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Client
+        exclude = ('user',)
+
+
 class UserSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
     get_full_name = serializers.CharField(read_only=True)
+    client = ClientForUserSerializer(read_only=True)
 
     class Meta:
         model = User
@@ -64,7 +75,6 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True},
         }
-
 
 class ChangePasswordSerializer(serializers.Serializer):
 
@@ -91,3 +101,18 @@ class ResetPasswordSerializer(serializers.Serializer):
 
     key = serializers.UUIDField()
     new_password = serializers.CharField(validators=[validate_password])
+
+
+class ClientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Client
+        fields = '__all__'
+
+
+class ReadClientSerializer(serializers.ModelSerializer):
+
+    user = ShortDescUserSerializer()
+
+    class Meta:
+        model = Client
+        fields = '__all__'
