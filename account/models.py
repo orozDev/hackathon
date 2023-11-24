@@ -35,7 +35,7 @@ class User(AbstractUser):
                                null=True, blank=True)
     phone = PhoneNumberField(max_length=100, unique=True, verbose_name=_('номер телефона'))
     email = models.EmailField(blank=True, verbose_name=_('электронная почта'), unique=True)
-    role = models.CharField(_('роль'), choices=ROLE, default=CLIENT)
+    role = models.CharField(_('роль'), choices=ROLE, default=CLIENT, max_length=10)
     last_activity = models.DateTimeField(blank=True,
                                          null=True, verbose_name=_('последнее действие'), )
 
