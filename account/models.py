@@ -54,6 +54,10 @@ class User(AbstractUser):
         return f'{self.get_full_name or str(self.phone)}'
 
 
+def get_expire_date():
+    return timezone.now() + timezone.timedelta(days=settings.EXPIRE_DAYS)
+
+
 class UserResetPassword(TimeStampAbstractModel):
     class Meta:
         verbose_name = _('Ключ для сброса пароля')
@@ -63,7 +67,7 @@ class UserResetPassword(TimeStampAbstractModel):
     user = models.OneToOneField('account.User', on_delete=models.CASCADE, verbose_name=_('пользователь'))
     key = models.UUIDField(_('ключ'), default=uuid4, editable=False)
     expire_date = models.DateTimeField(_('срок действия'),
-                                       default=timezone.now() + timezone.timedelta(days=settings.EXPIRE_DAYS))
+                                       default=get_expire_date)
 
     def __str__(self):
         return f'{self.user}'
