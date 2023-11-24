@@ -1,5 +1,7 @@
 from rest_framework import permissions
 
+from account.models import User
+
 
 class IsAdmin(permissions.BasePermission):
 
@@ -23,3 +25,8 @@ class IsOwner(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.user == obj.user or request.user.is_superuser
+
+class IsStaff(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return request.user.role == User.STAFF or request.user.is_superuser

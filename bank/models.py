@@ -117,4 +117,41 @@ class RecordToStaff(TimeStampAbstractModel):
         return f'{self.user.get_full_name} - {self.staff.user.get_full_name}'
 
 
+class Queue(TimeStampAbstractModel):
+
+    SIMPLE = 'simple'
+    RECORDED_CLIENT = 'recorded_client'
+
+    TYPE = (
+        (SIMPLE, _('обычный клиент')),
+        (RECORDED_CLIENT, _('зарегистрированный клиент'))
+    )
+
+    WAITING = 'waiting'
+    COMPLETED = 'completed'
+
+    STATUS = (
+        (WAITING, _('В ожидании')),
+        (COMPLETED, _('Завершено'))
+    )
+
+    class Meta:
+        verbose_name = _('очередь')
+        verbose_name_plural = _('очереди')
+        ordering = ('-created_at', '-updated_at')
+
+    branch = models.ForeignKey('bank.Branch', models.PROTECT, verbose_name=_('отделение'))
+    service = models.ForeignKey('core.Service', models.PROTECT, verbose_name=_('сервис'))
+    value = models.PositiveIntegerField(_('место'))
+    type = models.CharField(_('тип'), choices=TYPE, default=SIMPLE)
+    status = models.CharField(_('статус'), choices=STATUS, default=WAITING)
+
+    @property
+    def slug(self):
+        prefix = 'S' if self.type == self.SIMPLE else 'R'
+        return f'{prefix}{self.value}'
+
+    def __str__(self):
+        return f'{self.slug} - {self.created_at}'
+
 # Create your models here.

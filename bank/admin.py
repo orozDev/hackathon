@@ -1,6 +1,6 @@
 from django.contrib import admin
-
-from bank.models import BranchSchedule, Branch, Record, RecordToStaff
+from django.utils.translation import gettext_lazy as _
+from bank.models import BranchSchedule, Branch, Record, RecordToStaff, Queue
 
 
 class BranchScheduleStackedInline(admin.StackedInline):
@@ -34,5 +34,17 @@ class RecordToStaffAdmin(admin.ModelAdmin):
     list_filter = ('user', 'status', 'staff', 'meeting_date',)
     search_fields = ('name', 'code',)
     readonly_fields = ('created_at', 'updated_at',)
+
+
+@admin.register(Queue)
+class QueueAdmin(admin.ModelAdmin):
+    list_display = ('id', 'slug', 'branch', 'created_at')
+    list_display_links = ('id', 'slug',)
+    list_filter = ('branch', 'service', 'status',)
+    readonly_fields = ('created_at', 'updated_at',)
+
+    @admin.display(description=_('номер'))
+    def slug(self, obj: Queue):
+        return obj.slug
 
 # Register your models here.

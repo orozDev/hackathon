@@ -11,12 +11,12 @@ from rest_registration.utils.responses import get_ok_response
 from api.mixins import PaginationBreaker, UltraModelViewSet
 from .serializers import LoginSerializer, UserSerializer, ProfileSerializer, RegisterUserSerializer, \
     ResetPasswordSerializer, SendResetPasswordKeySerializer, ChangePasswordSerializer, ReadClientSerializer, \
-    ClientSerializer
-from account.models import User, UserResetPassword, Client
+    ClientSerializer, StaffSerializer
+from account.models import User, UserResetPassword, Client, Staff
 
 from .services import UserPasswordResetManager
 from ..paginations import StandardResultsSetPagination
-from ..permissions import IsSuperAdmin
+from ..permissions import IsSuperAdmin, IsStaff
 
 
 class LoginApiView(GenericAPIView):
@@ -24,9 +24,9 @@ class LoginApiView(GenericAPIView):
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        login_serializer = self.serializer_class(data=request.data)
+        login_serializer = self.get_serializer(data=request.data)
         login_serializer.is_valid(raise_exception=True)
-        user = authenticate(username=request.data['username'], password=request.data['password'])
+        user = authenticate(phone=request.data['phone'], password=request.data['password'])
         if user:
             serializer = UserSerializer(user, many=False, context={'request': request})
             token = Token.objects.get_or_create(user=user)[0].key
@@ -42,9 +42,10 @@ class RegisterApiView(GenericAPIView):
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        Client.objects.create(user=user)
         response_serializer = UserSerializer(user, many=False, context={'request': request})
         token = Token.objects.get_or_create(user=user)[0].key
         data = {**response_serializer.data, 'token': f'{token}'}
@@ -65,7 +66,7 @@ class ProfileApiView(GenericAPIView):
         return Response(serializer.data)
 
     def patch(self, request, *args, **kwargs):
-        serializer = self.serializer_class(request.user, data=request.data, partial=True)
+        serializer = self.get_serializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
         return self.profile_response(request, instance)
@@ -101,7 +102,7 @@ class SendResetPasswordKeyApiView(GenericAPIView):
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
         user = get_object_or_404(User, email=email)
@@ -115,7 +116,7 @@ class ResetPasswordByKeyApiView(GenericAPIView):
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         key = serializer.validated_data['key']
         new_password = serializer.validated_data['new_password']
@@ -144,8 +145,31 @@ class ClientViewSet(UltraModelViewSet):
     filterset_fields = ['user']
     permission_classes_by_action = {
         'create': (AllowAny,),
-        'list': (IsAuthenticated, IsSuperAdmin,),
+        'list': (IsAuthenticated, IsStaff,),
         'update': (IsAuthenticated, IsSuperAdmin,),
-        'retrieve': (IsAuthenticated, IsSuperAdmin),
+        'retrieve': (IsAuthenticated, IsStaff),
+        'destroy': (IsAuthenticated, IsSuperAdmin),
+    }
+
+
+class StaffViewSet(UltraModelViewSet):
+    queryset = Staff.objects.all()
+    serializer_classes = {
+        'create': StaffSerializer,
+        'list': ReadClientSerializer,
+        'update': StaffSerializer,
+        'retrieve': ReadClientSerializer,
+    }
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [DjangoFilterBackend,
+                       filters.OrderingFilter,
+                       filters.SearchFilter]
+    ordering_fields = ['created_at']
+    filterset_fields = ['user']
+    permission_classes_by_action = {
+        'create': (AllowAny,),
+        'list': (IsAuthenticated, IsStaff,),
+        'update': (IsAuthenticated, IsSuperAdmin,),
+        'retrieve': (IsAuthenticated, IsStaff,),
         'destroy': (IsAuthenticated, IsSuperAdmin),
     }

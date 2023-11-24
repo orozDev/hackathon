@@ -1,12 +1,15 @@
-from rest_framework import routers
 from django.urls import path, include
-from .yasg import urlpatterns as url_doc
+from rest_framework import routers
 from . import api
 
+from .yasg import urlpatterns as url_doc
+
 router = routers.DefaultRouter()
+router.register('cities', api.CityViewSet)
 
 urlpatterns = [
     path('auth/', include('api.auth.endpoints')),
+    path('bank/', include('api.bank.endpoints')),
     path('', include(router.urls)),
 ]
 

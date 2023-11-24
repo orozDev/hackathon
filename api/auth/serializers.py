@@ -1,8 +1,9 @@
-from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from account.models import User, Client
 from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers
 
+from account.models import User, Client, Staff
+from api.bank.serializers import ReadBranchSerializer
 from utils.serializers import ShortDescUserSerializer
 
 
@@ -50,14 +51,21 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    phone = serializers.CharField()
     password = serializers.CharField()
 
 
 class ClientForUserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Client
+        exclude = ('user',)
+
+
+class StaffForUserSerializer(serializers.ModelSerializer):
+    branch = ReadBranchSerializer()
+
+    class Meta:
+        model = Staff
         exclude = ('user',)
 
 
@@ -66,6 +74,7 @@ class UserSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(required=True)
     get_full_name = serializers.CharField(read_only=True)
     client = ClientForUserSerializer(read_only=True)
+    staff = StaffForUserSerializer(read_only=True)
 
     class Meta:
         model = User
@@ -75,8 +84,8 @@ class UserSerializer(serializers.ModelSerializer):
             'password': {'write_only': True},
         }
 
-class ChangePasswordSerializer(serializers.Serializer):
 
+class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField()
     password = serializers.CharField()
 
@@ -97,7 +106,6 @@ class SendResetPasswordKeySerializer(serializers.Serializer):
 
 
 class ResetPasswordSerializer(serializers.Serializer):
-
     key = serializers.UUIDField()
     new_password = serializers.CharField(validators=[validate_password])
 
@@ -109,9 +117,23 @@ class ClientSerializer(serializers.ModelSerializer):
 
 
 class ReadClientSerializer(serializers.ModelSerializer):
-
     user = ShortDescUserSerializer()
 
     class Meta:
         model = Client
+        fields = '__all__'
+
+
+class StaffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Staff
+        fields = '__all__'
+
+
+class ReadStaffSerializer(serializers.ModelSerializer):
+    user = ShortDescUserSerializer()
+    branch = ReadBranchSerializer()
+
+    class Meta:
+        model = Staff
         fields = '__all__'
