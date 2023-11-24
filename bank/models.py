@@ -3,22 +3,8 @@ import string
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-
+from django.utils import timezone
 from utils.models import TimeStampAbstractModel
-
-
-class Branch(TimeStampAbstractModel):
-    class Meta:
-        verbose_name = _('отделение')
-        verbose_name_plural = _('отделении')
-        ordering = ('-created_at', '-updated_at')
-
-    city = models.ForeignKey('core.City', models.PROTECT, verbose_name=_('город'))
-    address = models.CharField(_('адрес'), max_length=100)
-    description = models.TextField(_('описание'))
-
-    def __str__(self):
-        return f'{self.city} - {self.address}'
 
 
 class BranchSchedule(TimeStampAbstractModel):
@@ -45,13 +31,37 @@ class BranchSchedule(TimeStampAbstractModel):
         verbose_name_plural = _('графики работы банковских отделении')
         ordering = ('-created_at', '-updated_at')
 
-    day = models.CharField(_('день'), max_length=50, choices=DAYS)
+    week = models.CharField(_('день'), max_length=50, choices=DAYS)
     start_time = models.TimeField(_('время открытия'))
-    start_end = models.TimeField(_('время закрытия'))
+    end_time = models.TimeField(_('время закрытия'))
     branch = models.ForeignKey('bank.Branch', models.CASCADE, 'schedules')
 
     def __str__(self):
-        return f'{self.branch} - {self.day}'
+        return f'{self.branch} - {self.week}'
+
+
+class Branch(TimeStampAbstractModel):
+    class Meta:
+        verbose_name = _('отделение')
+        verbose_name_plural = _('отделении')
+        ordering = ('-created_at', '-updated_at')
+
+    city = models.ForeignKey('core.City', models.PROTECT, verbose_name=_('город'))
+    address = models.CharField(_('адрес'), max_length=100)
+    description = models.TextField(_('описание'))
+
+    def __str__(self):
+        return f'{self.city} - {self.address}'
+
+    @property
+    def is_open(self):
+        day = timezone.localdate().weekday()
+        week = BranchSchedule.DAYS[day][0]
+        time = timezone.localdate().weekday()
+        schedule = self.schedules.filter(week=week)
+        if schedule.exists() and schedule.start_time <= time and schedule.end_date >= time.end_time:
+            return True
+        return False
 
 
 def code_generator():

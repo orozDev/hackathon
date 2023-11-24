@@ -6,7 +6,7 @@ from django.urls import path
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="Food Insecurity API",
+      title="Hackathon API",
       default_version='v1',
       description="No description",
       terms_of_service="https://www.google.com/policies/terms/",
