@@ -41,7 +41,7 @@ class BranchScheduleViewSet(UltraModelViewSet):
                        filters.OrderingFilter,
                        filters.SearchFilter]
     ordering_fields = ['created_at']
-    filterset_fields = ['branch', 'day']
+    filterset_fields = ['branch', 'week']
     permission_classes_by_action = {
         'create': (IsAuthenticated, IsSuperAdmin,),
         'list': (AllowAny,),
