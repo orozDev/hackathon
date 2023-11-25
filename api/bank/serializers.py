@@ -48,13 +48,13 @@ class BranchScheduleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class RecordSerializer(serializers.ModelSerializer):
+class CreateRecordSerializer(serializers.ModelSerializer):
 
     user = serializers.CurrentUserDefault()
 
     class Meta:
         model = Record
-        fields = '__all__'
+        exclude = ('code', 'user',)
 
     def validate(self, attrs):
         branch = attrs.get('branch')
@@ -66,6 +66,7 @@ class RecordSerializer(serializers.ModelSerializer):
             branch=branch,
             meeting_date=meeting_date,
             service=service,
+            status=Record.WAITING,
         )
         if record.exists():
             raise serializers.ValidationError({'branch': [
@@ -90,3 +91,10 @@ class ReadRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Record
         fields = '__all__'
+
+
+class UpdateRecordSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Record
+        fields = ('status',)

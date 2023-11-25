@@ -106,7 +106,6 @@ class Record(TimeStampAbstractModel):
 
         if not self.branch.is_open and self.id is None:
             raise ValidationError({'branch': [_('Отделение закрыто')]})
-        print(self.id)
         if self.id is not None:
             record = Record.objects.exclude(id=self.id).filter(
                 branch=self.branch,

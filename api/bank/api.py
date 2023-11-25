@@ -1,5 +1,6 @@
-from api.bank.serializers import BranchSerializer, ReadBranchSerializer, BranchScheduleSerializer, RecordSerializer, \
-    ReadRecordSerializer
+from api.bank.serializers import BranchSerializer, ReadBranchSerializer, BranchScheduleSerializer, \
+    CreateRecordSerializer, \
+    ReadRecordSerializer, UpdateRecordSerializer
 from api.mixins import UltraModelViewSet
 from api.paginations import StandardResultsSetPagination
 from api.permissions import IsSuperAdmin
@@ -54,9 +55,9 @@ class BranchScheduleViewSet(UltraModelViewSet):
 class RecordViewSet(UltraModelViewSet):
     queryset = Record.objects.all()
     serializer_classes = {
-        'create': RecordSerializer,
+        'create': CreateRecordSerializer,
         'list': ReadRecordSerializer,
-        'update': RecordSerializer,
+        'update': UpdateRecordSerializer,
         'retrieve': ReadRecordSerializer,
     }
     pagination_class = StandardResultsSetPagination
