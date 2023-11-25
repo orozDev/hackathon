@@ -1,11 +1,12 @@
 import django
 from django.core.validators import MinValueValidator
+from rest_framework import mixins
 from rest_framework import serializers
 from rest_framework import status
 from rest_framework.decorators import action, permission_classes
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from utils.constants import USE_PAGINATION
 from utils.utils import make_bool
@@ -144,5 +145,28 @@ class UltraModelViewSet(
     SerializersByAction,
     DestroyModelMixin,
     ModelViewSet,
+):
+    pass
+
+
+class UltraReadOnlyModelViewSet(
+    PermissionByAction,
+    PaginationBreaker,
+    MultipleDestroyMixin,
+    SerializersByAction,
+    DestroyModelMixin,
+    ReadOnlyModelViewSet,
+):
+    pass
+
+
+class UltraReadAndCreateModelViewSet(
+    PermissionByAction,
+    PaginationBreaker,
+    MultipleDestroyMixin,
+    SerializersByAction,
+    DestroyModelMixin,
+    mixins.CreateModelMixin,
+    ReadOnlyModelViewSet,
 ):
     pass

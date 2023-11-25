@@ -160,10 +160,12 @@ class Queue(TimeStampAbstractModel):
     )
 
     WAITING = 'waiting'
+    IN_PROGRESS = 'in_progress'
     COMPLETED = 'completed'
 
     STATUS = (
         (WAITING, _('В ожидании')),
+        (IN_PROGRESS, _('Обслуживается')),
         (COMPLETED, _('Завершено'))
     )
 
@@ -177,6 +179,7 @@ class Queue(TimeStampAbstractModel):
     value = models.PositiveIntegerField(_('место'))
     type = models.CharField(_('тип'), choices=TYPE, default=SIMPLE, max_length=20)
     status = models.CharField(_('статус'), choices=STATUS, default=WAITING, max_length=20)
+    user = models.ForeignKey('account.User', models.SET_NULL, null=True, blank=True, verbose_name=_('пользователь'))
 
     @property
     def slug(self):

@@ -38,7 +38,7 @@ class RecordToStaffAdmin(admin.ModelAdmin):
 
 @admin.register(Queue)
 class QueueAdmin(admin.ModelAdmin):
-    list_display = ('id', 'slug', 'branch', 'created_at')
+    list_display = ('id', 'slug', 'branch', 'created_at', 'status',)
     list_display_links = ('id', 'slug',)
     list_filter = ('branch', 'service', 'status',)
     readonly_fields = ('created_at', 'updated_at',)

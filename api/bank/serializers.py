@@ -1,16 +1,14 @@
-from pprint import pprint
+from datetime import datetime
 
-from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
-
+from rest_framework import serializers
+from django.utils import timezone
 from api.serializers import CitySerializer, ServiceSerializer
-from bank.models import Branch, BranchSchedule, Record
-from utils.models import TimeStampAbstractModel
+from bank.models import Branch, BranchSchedule, Record, Queue
 from utils.serializers import ShortDescUserSerializer
 
 
 class ScheduleForBranchSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = BranchSchedule
         exclude = ('branch',)
@@ -42,14 +40,12 @@ class BranchSerializer(serializers.ModelSerializer):
 
 
 class BranchScheduleSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = BranchSchedule
         fields = '__all__'
 
 
 class CreateRecordSerializer(serializers.ModelSerializer):
-
     user = serializers.CurrentUserDefault()
 
     class Meta:
@@ -94,7 +90,29 @@ class ReadRecordSerializer(serializers.ModelSerializer):
 
 
 class UpdateRecordSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Record
         fields = ('status',)
+
+
+class CreateQueueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Queue
+        fields = ('branch', 'service', 'type', 'user',)
+
+    def create(self, validated_data):
+        now = timezone.now().date()
+        queues = Queue.objects.filter(created_at__date=now)
+        validated_data['value'] = queues.count() + 1
+        return super().create(validated_data)
+
+
+class QueueSerializer(serializers.ModelSerializer):
+
+    branch = ReadBranchForRecordSerializer()
+    service = ServiceSerializer()
+    user = ShortDescUserSerializer()
+
+    class Meta:
+        model = Queue
+        fields = '__all__'
