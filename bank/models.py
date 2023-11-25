@@ -1,9 +1,11 @@
 import random
 import string
 
+from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
 from utils.models import TimeStampAbstractModel
 
 
@@ -57,10 +59,13 @@ class Branch(TimeStampAbstractModel):
     def is_open(self):
         day = timezone.localdate().weekday()
         week = BranchSchedule.DAYS[day][0]
-        time = timezone.localdate().weekday()
+        time = timezone.localtime().time()
         schedule = self.schedules.filter(week=week)
-        if schedule.exists() and schedule.start_time <= time and schedule.end_date >= time.end_time:
-            return True
+
+        if schedule.exists():
+            schedule = schedule.first()
+            if schedule.start_time <= time <= schedule.end_time:
+                return True
         return False
 
 
@@ -71,15 +76,14 @@ def code_generator():
 
 
 class Record(TimeStampAbstractModel):
-
     WAITING = 'waiting'
     CANCELED = 'canceled'
     COMPLETED = 'completed'
 
     STATUS = (
-       (WAITING, _('В ожидании')),
-       (CANCELED, _('Отменено')),
-       (COMPLETED, _('Завершено'))
+        (WAITING, _('В ожидании')),
+        (CANCELED, _('Отменено')),
+        (COMPLETED, _('Завершено'))
     )
 
     class Meta:
@@ -98,17 +102,37 @@ class Record(TimeStampAbstractModel):
     def __str__(self):
         return f'{self.user} - {self.branch}'
 
+    def clean(self):
+
+        if not self.branch.is_open and self.id is None:
+            raise ValidationError({'branch': [_('Отделение закрыто')]})
+        print(self.id)
+        if self.id is not None:
+            record = Record.objects.exclude(id=self.id).filter(
+                branch=self.branch,
+                meeting_date=self.meeting_date,
+                service=self.service,
+            )
+        else:
+            record = Record.objects.filter(
+                branch=self.branch,
+                meeting_date=self.meeting_date,
+                service=self.service
+            )
+        if record.exists():
+            raise ValidationError({'branch': [
+                _(f'{self.meeting_date.date()} в {self.meeting_date.time()} в отделение уже есть запись')]})
+
 
 class RecordToStaff(TimeStampAbstractModel):
-
     WAITING = 'waiting'
     CANCELED = 'canceled'
     COMPLETED = 'completed'
 
     STATUS = (
-       (WAITING, _('В ожидании')),
-       (CANCELED, _('Отменено')),
-       (COMPLETED, _('Завершено'))
+        (WAITING, _('В ожидании')),
+        (CANCELED, _('Отменено')),
+        (COMPLETED, _('Завершено'))
     )
 
     class Meta:
@@ -128,7 +152,6 @@ class RecordToStaff(TimeStampAbstractModel):
 
 
 class Queue(TimeStampAbstractModel):
-
     SIMPLE = 'simple'
     RECORDED_CLIENT = 'recorded_client'
 
